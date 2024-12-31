@@ -2,6 +2,7 @@ import express from 'express';
 import Note from '../models/Note.js';
 import authenticateToken from '../middleware/auth.js';
 import { encrypt, decrypt } from '../utils/encryption.js';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -55,12 +56,13 @@ router.post('/', async (req, res) => {
     // Encrypt the content before saving
     const encryptedContent = encrypt(content);
     const newNote = await Note.create({ title, content: encryptedContent });
-
+    logger.info(`Note created by '${req.user.id}' with title '${title}'`);
     res.status(201).json({
       message: 'New note created successfully',
       data: newNote
     });
   } catch (error) {
+    logger.error(`Error creating note => ${error.message}`);
     res.status(500).json({
       message: 'Error creating note',
       error: error.message
@@ -84,11 +86,13 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Note not found!' });
     }
 
+    logger.info(`Note with ID '${id}' updated by '${req.user.id}'`);
     res.status(200).json({
       message: 'Note updated successfully.',
       data: updatedNote
     });
   } catch (error) {
+    logger.error(`Error updating note: '${id}' with title '${title}'`);
     res.status(500).json({ message: 'Error updating note:', error });
   }
 });
@@ -104,8 +108,10 @@ router.delete('/:id', async (req, res) => {
       return res(404).json({ message: 'Note not found' });
     }
 
+    logger.info(`Note with id '${id}' deleted successfully`);
     res.status(200).json({ message: 'Note deleted successfully' });
   } catch (error) {
+    logger.error(`Failed to delete note: '${id}'`);
     res.status(500).json({ message: 'Error deleting note:', error });
   }
 });
