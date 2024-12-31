@@ -1,6 +1,7 @@
 import express from 'express';
 import Note from '../models/Note.js';
 import authenticateToken from '../middleware/auth.js';
+import { encrypt, decrypt } from '../utils/encryption.js';
 
 const router = express.Router();
 
@@ -11,9 +12,26 @@ router.use(authenticateToken);
 router.get('/', async (req, res) => {
   try {
     const notes = await Note.find();
+
+    // Decrypt content for each note:
+    const decryptedNotes = notes.map((note) => {
+      try {
+        return {
+	  ...note._doc,
+	  content: decrypt(note.content)
+        };
+      } catch (error) {
+        console.error(`Error decrypting note with ID ${note._id}`,
+		      error.message);
+        return {
+	  ...note._doc,
+	  content: 'Error decrypting content'
+        };
+      }
+    });
     res.status(200).json({
       message: 'List of all notes',
-      data: notes
+      data: decryptedNotes
     });
   } catch (error) {
     res.status(500).json({
@@ -27,21 +45,26 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { title, content } = req.body;
 
-  if (!title || !content) {
+  if (!title || !content || title.trim() === '' || content.trim() === '') {
     res.status(400).json({
-      message: 'Title and content are required'
+      message: 'Title and content must not be empty'
     });
   }
 
   try {
-    const newNote = await Note.create({ title, content });
+    // Encrypt the content before saving
+    const encryptedContent = encrypt(content);
+    const newNote = await Note.create({ title, content: encryptedContent });
 
     res.status(201).json({
       message: 'New note created successfully',
       data: newNote
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating note' });
+    res.status(500).json({
+      message: 'Error creating note',
+      error: error.message
+    });
   }
 });
 
@@ -51,8 +74,10 @@ router.put('/:id', async (req, res) => {
   const { title, content } = req.body;
 
   try {
+    const encryptedContent = encrypt(content);
+
     const updatedNote = await Note.findByIdAndUpdate(
-      id, { title, content }, { new: true }
+      id, { title, content: encryptedContent }, { new: true }
     );
 
     if (!updatedNote) {
@@ -76,7 +101,7 @@ router.delete('/:id', async (req, res) => {
     const deletedNote = await Note.findByIdAndDelete(id);
 
     if (!deletedNote) {
-      return res(400).json({ message: 'Note not found' });
+      return res(404).json({ message: 'Note not found' });
     }
 
     res.status(200).json({ message: 'Note deleted successfully' });
