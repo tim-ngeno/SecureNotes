@@ -12,7 +12,7 @@ router.use(authenticateToken);
 // Fetch all notes
 router.get('/', async (req, res) => {
   try {
-    const notes = await Note.find();
+    const notes = await Note.find({ userId: req.user.id });
 
     // Decrypt content for each note:
     const decryptedNotes = notes.map((note) => {
@@ -45,6 +45,7 @@ router.get('/', async (req, res) => {
 // Create a new note
 router.post('/', async (req, res) => {
   const { title, content } = req.body;
+  const userId = req.user.id;
 
   if (!title || !content || title.trim() === '' || content.trim() === '') {
     res.status(400).json({
@@ -55,8 +56,12 @@ router.post('/', async (req, res) => {
   try {
     // Encrypt the content before saving
     const encryptedContent = encrypt(content);
-    const newNote = await Note.create({ title, content: encryptedContent });
-    logger.info(`Note created by '${req.user.id}' with title '${title}'`);
+    const newNote = await Note.create({
+      title,
+      content: encryptedContent,
+      userId
+    });
+    logger.info(`Note created by '${userId}' with title '${title}'`);
     res.status(201).json({
       message: 'New note created successfully',
       data: newNote
@@ -74,6 +79,21 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
+
+  try {
+    const note = await Note.findById(id);
+
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+    if (note.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: 'You are not authorized to update this note'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to authorize user!' });
+  }
 
   try {
     const encryptedContent = encrypt(content);
@@ -102,7 +122,9 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedNote = await Note.findByIdAndDelete(id);
+    const deletedNote = await Note.findOneAndDelete({
+      _id: id, userId: req.user.id
+    });
 
     if (!deletedNote) {
       return res(404).json({ message: 'Note not found' });
