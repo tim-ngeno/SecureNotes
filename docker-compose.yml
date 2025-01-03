@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    container_name: securenotes
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: ${MONGO_URI}
+    networks:
+      - securenotes-network
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:4.4
+    container_name: mongo
+    ports:
+      - "27017:27017"  # Expose MongoDB on the default port
+    networks:
+      - securenotes-network
+    volumes:
+      - mongo-data:/data/db  # Persistent storage for MongoDB
+
+networks:
+  securenotes-network:
+
+volumes:
+  mongo-data:
