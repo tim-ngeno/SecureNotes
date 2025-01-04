@@ -2,25 +2,36 @@ pipeline {
     agent any
 
     environment {
-        // Define environment variables for Docker and your app
+        // Define Docker image details and other environment variables
         DOCKER_IMAGE = "secure-notes-app:${env.BUILD_NUMBER}"
-        NODE_ENV = "test"
+        COMPOSE_FILE = "docker-compose.yml"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Checkout code from the GitHub repository
+                // Checkout the latest code from the repository
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Build Docker image for the application
+                // Build the application Docker image
                 script {
                     sh """
-                    docker compose up --build ${DOCKER_IMAGE} .
+                    docker build -t ${DOCKER_IMAGE} .
+                    """
+                }
+            }
+        }
+
+        stage('Start Services with Docker-Compose') {
+            steps {
+                // Start MongoDB service using docker-compose
+                script {
+                    sh """
+                    docker compose up -d mongo
                     """
                 }
             }
@@ -28,11 +39,12 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                // Run the tests inside a Docker container
+                // Run tests in the application container
                 script {
                     sh """
                     docker run --rm \
                     --env-file .env \
+                    --network host \
                     ${DOCKER_IMAGE} \
                     npm test
                     """
@@ -43,9 +55,10 @@ pipeline {
 
     post {
         always {
-            // Clean up Docker images after the pipeline execution
+            // Clean up resources after the pipeline execution
             script {
                 sh """
+                docker compose down || true
                 docker rmi ${DOCKER_IMAGE} || true
                 """
             }
