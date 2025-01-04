@@ -43,9 +43,9 @@ pipeline {
     }
 
     post {
-        always {
-            // Clean up or additional steps (e.g., push the image to a registry)
-        }
+        // always {
+        //     // Clean up or additional steps (e.g., push the image to a registry)
+        // }
         success {
             echo 'Build and tests passed successfully!'
         }
