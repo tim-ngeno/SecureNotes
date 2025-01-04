@@ -20,7 +20,7 @@ pipeline {
                 // Build Docker image for the application
                 script {
                     sh """
-                    docker compose --build ${DOCKER_IMAGE} .
+                    docker compose up --build ${DOCKER_IMAGE} .
                     """
                 }
             }
