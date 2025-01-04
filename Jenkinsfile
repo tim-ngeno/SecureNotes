@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Set environment variables (if needed)
+        // Docker image name
         DOCKER_IMAGE = "securenotes:latest"
     }
 
@@ -17,35 +17,39 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 // Install Node.js dependencies
-                script {
-                    sh 'npm install'
-                }
+                sh 'npm install'
             }
         }
 
         stage('Run Tests') {
             steps {
-                // Run unit tests
-                script {
-                    sh 'npm test'
+                // Use credentials to load environment variables and run tests
+                withCredentials([file(credentialsId: 'ENV_FILE', variable: 'ENV_FILE_PATH')]) {
+                    sh '''
+                    # Load environment variables from .env file
+                    export $(cat $ENV_FILE_PATH | xargs)
+                    
+                    # Run unit tests
+                    npm test
+                    '''
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Build the Docker image for SecureNotes
-                script {
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                // Build the Docker image with .env file included during build context
+                withCredentials([file(credentialsId: 'ENV_FILE', variable: 'ENV_FILE_PATH')]) {
+                    sh '''
+                    # Build the Docker image and pass the .env file to the build context
+                    docker build --build-arg ENV_FILE=$ENV_FILE_PATH -t $DOCKER_IMAGE .
+                    '''
                 }
             }
         }
     }
 
     post {
-        // always {
-        //     // Clean up or additional steps (e.g., push the image to a registry)
-        // }
         success {
             echo 'Build and tests passed successfully!'
         }
