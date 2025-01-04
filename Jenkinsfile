@@ -2,46 +2,44 @@ pipeline {
     agent any
 
     environment {
-        // Docker image name
         DOCKER_IMAGE = "securenotes:latest"
+        TEST_IMAGE = "securenotes:test"
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                // Clone the repository from GitHub
                 git branch: 'main', url: 'https://github.com/tim-ngeno/SecureNotes.git'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Base Docker Image') {
             steps {
-                // Install Node.js dependencies
-                sh 'npm install'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                // Use credentials to load environment variables and run tests
                 withCredentials([file(credentialsId: 'ENV_FILE', variable: 'ENV_FILE_PATH')]) {
                     sh '''
-                    # Load environment variables from .env file
-                    export $(cat $ENV_FILE_PATH | xargs)
-                    
-                    # Run unit tests
-                    npm test
+                    # Build a base Docker image with the application code
+                    docker build --build-arg ENV_FILE=$ENV_FILE_PATH -t $TEST_IMAGE .
                     '''
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Run Tests') {
             steps {
-                // Build the Docker image with .env file included during build context
                 withCredentials([file(credentialsId: 'ENV_FILE', variable: 'ENV_FILE_PATH')]) {
                     sh '''
-                    # Build the Docker image and pass the .env file to the build context
+                    # Run tests inside the test Docker container
+                    docker run --rm --env-file=$ENV_FILE_PATH $TEST_IMAGE npm test
+                    '''
+                }
+            }
+        }
+
+        stage('Build Final Docker Image') {
+            steps {
+                withCredentials([file(credentialsId: 'ENV_FILE', variable: 'ENV_FILE_PATH')]) {
+                    sh '''
+                    # Build the final Docker image (production-ready)
                     docker build --build-arg ENV_FILE=$ENV_FILE_PATH -t $DOCKER_IMAGE .
                     '''
                 }
@@ -51,7 +49,7 @@ pipeline {
 
     post {
         success {
-            echo 'Build and tests passed successfully!'
+            echo 'Build, tests, and final Docker image creation completed successfully!'
         }
         failure {
             echo 'Build or tests failed!'
