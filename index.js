@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import notesRouter from './routes/notes.js';
 import authRouter from './routes/auth.js';
+import connectDB from './config/db.js';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 
@@ -10,7 +11,6 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
 
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, 	// Up to 1 hour
@@ -29,10 +29,7 @@ app.use('/auth', authRouter);
 app.use(limiter);
 
 // Connect to MongoDB and listen for changes
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB...'))
-  .catch((error) => console.error('MongoDB connection error: ', error));
+connectDB();
 
 // Use imported routes
 app.use('/notes', notesRouter);
@@ -44,3 +41,6 @@ app.get('/', (req, res) => {
 
 // Listen for incoming connections
 app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
+
+// Export app
+export default app;
