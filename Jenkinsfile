@@ -39,10 +39,10 @@ pipeline {
     }
 
     post {
-        // Clean up workspace after the build (your original code, slightly adjusted)
         always {
-            cleanWs()
-            // No need for `deleteDir()` if `cleanWs()` is used
+            node {
+                cleanWs()
+            }
         }
         success {
             echo 'Build and tests completed successfully!'
