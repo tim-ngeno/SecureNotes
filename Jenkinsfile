@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         MONGO_URI = credentials('MONGO_URI')
-        JWT_SECRET = credentials('JWT_SECRET')
-        ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
-        PORT = '3000'
     }
 
     stages {
