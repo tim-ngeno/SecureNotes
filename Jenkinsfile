@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        MONGO_URI = credentials('MONGO_URI')
-    }
-
     stages {
         stage('Checkout') {
             steps {
