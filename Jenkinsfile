@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        MONGO_URI = credentials('MONGO_URI')           // Secure MongoDB URI
-        JWT_SECRET = credentials('JWT_SECRET')         // Secure JWT secret
-        ENCRYPTION_KEY = credentials('ENCRYPTION_KEY') // Secure encryption key
-        PORT = '3000'                                  // Non-sensitive variable
+        MONGO_URI = credentials('MONGO_URI')
+        JWT_SECRET = credentials('JWT_SECRET')
+        ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
+        PORT = '3000'
     }
 
     stages {
@@ -36,12 +36,17 @@ pipeline {
 
     post {
         always {
-            // Clean up workspace after the build
-            cleanWs()
+            // Ensure the cleanup steps are inside a node block
+            node {
+                // Clean up workspace after the build
+                cleanWs()
+            }
         }
+
         success {
             echo 'Build and tests completed successfully!'
         }
+
         failure {
             echo 'Build or tests failed. Please check the logs.'
         }
