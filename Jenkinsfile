@@ -16,14 +16,13 @@ pipeline {
             }
         }
         stage('Run Tests') {
+	    environment {
+		MONGO_URI = credentials('MONGO_URI')
+		JWT_SECRET = credentials('JWT_SECRET')
+		ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
+		PORT = '3000'
+	    }
             steps {
-		environment {
-		    MONGO_URI = credentials('MONGO_URI')
-		    JWT_SECRET = credentials('JWT_SECRET')
-		    ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
-		    PORT = '3000'
-		}
-                // Run tests using npm
                 sh 'npm test'
             }
         }
