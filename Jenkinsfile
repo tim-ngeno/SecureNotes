@@ -40,9 +40,7 @@ pipeline {
 
     post {
         always {
-            node {
-                cleanWs()
-            }
+            cleanWs()
         }
         success {
             echo 'Build and tests completed successfully!'
