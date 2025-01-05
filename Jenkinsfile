@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        MONGO_URI = credentials('MONGO_URI')           // Secure MongoDB URI
+        MONGO_URI = credentials('MONGO_URI') 
         JWT_SECRET = credentials('JWT_SECRET')         // JWT Secret
         ENCRYPTION_KEY = credentials('ENCRYPTION_KEY') // Encryption Key
         PORT = '3000'                                  // App Port
@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository
+                // Checkout the code from GitHub
                 checkout scm
             }
         }
@@ -23,28 +23,27 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                // Run tests and pass environment variables correctly
-                sh '''
-                echo "Testing with MONGO_URI: $MONGO_URI"
-                npm test
-                '''
+                // Run tests using npm
+                sh 'npm test'
             }
         }
     }
 
     post {
         always {
-            // Clean up workspace
+            // Clean up workspace after the build
             cleanWs()
         }
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Build and tests completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check the logs for details.'
+            echo 'Build or tests failed. Please check the logs.'
         }
     }
 }
+
+
 
 
 
