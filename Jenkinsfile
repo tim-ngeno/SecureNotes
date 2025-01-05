@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-	MONGO_URI = credentials('MONGO_URI')
-	JWT_SECRET= credentials('JWT_SECRET')
-	ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
-	PORT = credentials('PORT')
+        MONGO_URI = credentials('MONGO_URI')           // Secure MongoDB URI
+        JWT_SECRET = credentials('JWT_SECRET')         // Secure JWT secret
+        ENCRYPTION_KEY = credentials('ENCRYPTION_KEY') // Secure encryption key
+        PORT = '3000'                                  // Non-sensitive variable
     }
 
     stages {
@@ -15,17 +15,21 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Install Dependencies') {
             steps {
                 // Install npm dependencies
                 sh 'npm install'
             }
         }
+
         stage('Run Tests') {
             steps {
-                // Run tests using npm
-                sh 'echo "Testing with MONGO_URI: $MONGO_URI"'
-		sh 'npm test'
+                // Run tests with environment variables
+                sh '''
+                echo "Testing with MONGO_URI: $MONGO_URI"
+                npm test
+                '''
             }
         }
     }
