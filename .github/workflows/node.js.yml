@@ -47,8 +47,8 @@ jobs:
       # Step 6: Build and run the app using Docker Compose
       - name: Build and run Docker Compose
         run: |
-          docker-compose down
-          docker-compose up -d --build
+          docker compose down
+          docker compose up -d --build
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -66,4 +66,4 @@ jobs:
       # Step 9: Clean up Docker containers
       - name: Clean up
         if: always()
-        run: docker-compose down
+        run: docker compose down
