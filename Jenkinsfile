@@ -17,7 +17,13 @@ pipeline {
         stage('Run Tests') {
             steps {
                 // Run tests using npm
-                sh 'npm test'
+		withEnv([
+		    'MONGO_URI=${env.MONGO_URI}',
+		    'JWT_SECRET=${env.JWT_SECRET}',
+		    'ENCRYPTION_KEY=${env.ENCRYPTION_KEY}',
+		]) {
+                    sh 'npm test'
+		}
             }
         }
     }
