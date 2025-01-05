@@ -22,7 +22,10 @@ pipeline {
 		    'JWT_SECRET=${env.JWT_SECRET}',
 		    'ENCRYPTION_KEY=${env.ENCRYPTION_KEY}',
 		]) {
-                    sh 'npm test'
+                    sh '''
+                    echo "Testing with MONGO_URI: $MONGO_URI"
+                    npm test
+                    '''
 		}
             }
         }
