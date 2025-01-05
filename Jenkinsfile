@@ -24,10 +24,8 @@ pipeline {
         stage('Run Tests') {
             steps {
                 // Run tests using npm
-                sh '''
-                echo "Testing with MONGO_URI: $MONGO_URI"
-                npm test
-                '''
+                sh 'echo "Testing with MONGO_URI: $MONGO_URI"'
+		sh 'npm test'
             }
         }
     }
