@@ -5,7 +5,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      MONGO_URI: ${MONGO_URI}
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - PORT=${PORT}
     networks:
       - securenotes-network
     depends_on:
