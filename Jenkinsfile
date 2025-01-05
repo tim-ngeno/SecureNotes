@@ -30,23 +30,23 @@ pipeline {
         }
     }
 
-    post {
-        always {
-	    script {
-		if (getContext(hudson.FilePath)) {
-		    deleteDir()
-		}
-	    }
-            // Clean up workspace after the build
-            cleanWs()
-        }
-        success {
-            echo 'Build and tests completed successfully!'
-        }
-        failure {
-            echo 'Build or tests failed. Please check the logs.'
-        }
-    }
+    // post {
+    //     always {
+    // 	    script {
+    // 		if (getContext(hudson.FilePath)) {
+    // 		    deleteDir()
+    // 		}
+    // 	    }
+    //         // Clean up workspace after the build
+    //         cleanWs()
+    //     }
+    //     success {
+    //         echo 'Build and tests completed successfully!'
+    //     }
+    //     failure {
+    //         echo 'Build or tests failed. Please check the logs.'
+    //     }
+    // }
 }
 
 
