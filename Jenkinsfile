@@ -32,6 +32,11 @@ pipeline {
 
     post {
         always {
+	    script {
+		if (getContext(hudson.FilePath)) {
+		    deleteDir()
+		}
+	    }
             // Clean up workspace after the build
             cleanWs()
         }
