@@ -1,6 +1,13 @@
 pipeline {
     agent any
 
+    environment {
+	MONGO_URI = credentials('MONGO_URI')
+	JWT_SECRET= credentials('JWT_SECRET')
+	ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
+	PORT = credentials('PORT')
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -17,16 +24,10 @@ pipeline {
         stage('Run Tests') {
             steps {
                 // Run tests using npm
-		withEnv([
-		    'MONGO_URI=${env.MONGO_URI}',
-		    'JWT_SECRET=${env.JWT_SECRET}',
-		    'ENCRYPTION_KEY=${env.ENCRYPTION_KEY}',
-		]) {
-                    sh '''
-                    echo "Testing with MONGO_URI: $MONGO_URI"
-                    npm test
-                    '''
-		}
+                sh '''
+                echo "Testing with MONGO_URI: $MONGO_URI"
+                npm test
+                '''
             }
         }
     }
