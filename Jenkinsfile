@@ -3,6 +3,7 @@ pipeline {
 
     // Define environment variables at the pipeline level for better visibility
     environment {
+	DOCKER_IMAGE = 'securenotes'
         MONGO_URI = credentials('MONGO_URI')
         JWT_SECRET = credentials('JWT_SECRET')
         ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
@@ -17,25 +18,23 @@ pipeline {
                      branch: 'main'
             }
         }
-        stage('Install Dependencies') {
+        stage('Build docker image and start docker container') {
             steps {
-                // Use a more robust npm install command to handle potential issues
-                sh 'npm ci'
+                sh 'docker compose up --build -d'
                 sh 'echo $MONGO_URI' // For debugging purposes
             }
         }
         stage('Run Tests') {
             steps {
-                // Specify the test command explicitly
-                sh 'npm test'
+                sh "docker exec $DOCKER_IMAGE npm test"
             }
-            // Consider adding a post-action to archive test results (e.g., JUnit format)
-            post {
-                success {
-                    junit '**/test-results.xml'
-                }
-            }
-        }
+	}
+
+	stage('Stop Docker containers') {
+	    steps {
+		sh 'docker compose down'
+	    }
+	}
     }
 
     post {
