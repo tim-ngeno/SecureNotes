@@ -14,10 +14,3 @@ RUN npm ci
 
 # Copy the rest of the application code, excluding node_modules
 COPY . .
-
-
-# Expose the application port
-EXPOSE 3000
-
-# Start the application
-CMD ["npm", "start"]
