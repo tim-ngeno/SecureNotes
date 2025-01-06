@@ -33,7 +33,7 @@ pipeline {
 		// Start MongoDB using docker-compose.yml
 		sh 'docker compose -f docker-compose.yml up -d'
 		// Run the application container
-		sh "CONTAINER_ID = $(docker run -d)"
+		sh 'CONTAINER_ID = $docker run -d'
 		// run tests inside the application
 		sh "docker exec $DOCKER_IMAGE npm test"
 
