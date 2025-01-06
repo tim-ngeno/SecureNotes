@@ -30,19 +30,14 @@ pipeline {
 
         stage('Build Docker Image, start container and run tests') {
             steps {
-		// Start MongoDB using docker-compose.yml
-		sh 'docker compose -f docker-compose.yml up -d'
-		// Run the application container
-		sh 'CONTAINER_ID = $docker run -d'
+		// build docker image and start container
+		sh 'docker compose up --build -d'
+
 		// run tests inside the application
 		sh "docker exec $DOCKER_IMAGE npm test"
 
-		// Stop and removing the application container
-		sh "docker stop $CONTAINER_ID"
-		sh "docker rmi $CONTAINER_ID"
-
 		// Stop and remove the mongoDB container
-		sh "docker compose -f docker-compose.yml down"
+		sh "docker compose down"
 
 	    }
         }
