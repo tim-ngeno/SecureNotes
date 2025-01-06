@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 import chaiHttp, { request } from 'chai-http';
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import dotenv from 'dotenv';
 import app from '../index.js';
 import { encrypt } from '../utils/encryption.js';
@@ -17,10 +18,18 @@ let authToken;
 let otherUserAuthToken;
 let noteId;
 
+let mongoServer;
+
 // Mocha test suite
 describe('SecureNotes Application Tests', () => {
   before(async () => {
-    await mongoose.connect(process.env.MONGO_URI);
+    // Start in-memory MongoDB server
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+
+    // Connect mongoose to in-memory DB
+    await mongoose.connect(uri);
+
     // Clean up test database
     await Note.deleteMany();
     await User.deleteMany();
@@ -134,5 +143,9 @@ describe('SecureNotes Application Tests', () => {
     // Clean up test database after all tests are done
     await Note.deleteMany();
     await User.deleteMany();
+
+    // Stop in-memory MongoDB server
+    await mongoose.disconnect();
+    await mongoServer.stop();
   });
 });
