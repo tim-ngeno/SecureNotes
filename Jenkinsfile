@@ -52,13 +52,8 @@ pipeline {
 
     post {
         always {
-	    stage('Stop Docker Containers') {
-		steps {
-                    // Stop and remove containers after tests
-                    sh "docker compose down --volumes"
-		}
-            }
-            cleanWs() // Ensure workspace is cleaned up
+            sh "docker compose down --volumes"
+	    cleanWs() // Ensure workspace is cleaned up
         }
         success {
             echo 'Build and tests completed successfully!'
