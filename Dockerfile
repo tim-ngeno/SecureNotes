@@ -14,3 +14,6 @@ RUN npm ci
 
 # Copy the rest of the application code, excluding node_modules
 COPY . .
+
+# Expose port
+EXPOSE 3000
