@@ -1,45 +1,65 @@
 pipeline {
     agent any
 
-    // Define environment variables at the pipeline level for better visibility
     environment {
-	DOCKER_IMAGE = 'securenotes'
+        DOCKER_IMAGE = 'securenotes'
         MONGO_URI = credentials('MONGO_URI')
         JWT_SECRET = credentials('JWT_SECRET')
         ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
         PORT = '3000'
     }
 
+    options {
+        // Optimize pipeline performance
+        timeout(time: 30, unit: 'MINUTES') // Prevent jobs from hanging
+        skipDefaultCheckout() // Avoid redundant SCM checkout
+        parallelsAlwaysFailFast() // Stop parallel steps on failure
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 // Specify the SCM to avoid ambiguity
-                git url: 'https://github.com/tim-ngeno/SecureNotes.git',
-                     branch: 'main'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/tim-ngeno/SecureNotes']]
+                ])
             }
         }
-        stage('Build docker image and start docker container') {
+
+        stage('Build Docker Image') {
             steps {
-                sh 'docker compose up --build -d'
-                sh 'echo $MONGO_URI' // For debugging purposes
+                // Build and tag the Docker image
+                sh "docker build -t $DOCKER_IMAGE ."
             }
         }
+
+        stage('Start Docker Container') {
+            steps {
+                // Use docker-compose for container orchestration
+                sh "docker compose up -d"
+            }
+        }
+
         stage('Run Tests') {
             steps {
+                // Run tests inside the Docker container
                 sh "docker exec $DOCKER_IMAGE npm test"
             }
-	}
+        }
 
-	stage('Stop Docker containers') {
-	    steps {
-		sh 'docker compose down'
-	    }
-	}
+        stage('Stop Docker Containers') {
+            steps {
+                // Stop and remove containers after tests
+                sh "docker compose down --volumes"
+            }
+        }
     }
 
     post {
         always {
-            cleanWs()
+            cleanWs() // Ensure workspace is cleaned up
         }
         success {
             echo 'Build and tests completed successfully!'
