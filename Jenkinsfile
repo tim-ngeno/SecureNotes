@@ -28,17 +28,10 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image and start the container') {
             steps {
                 // Build and tag the Docker image
-                sh "docker build -t $DOCKER_IMAGE ."
-            }
-        }
-
-        stage('Start Docker Container') {
-            steps {
-                // Use docker-compose for container orchestration
-                sh "docker compose up -d"
+                sh "docker compose up --build -d"
             }
         }
 
