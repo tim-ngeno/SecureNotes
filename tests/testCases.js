@@ -23,7 +23,9 @@ let mongoServer;
 // Mocha test suite
 describe('SecureNotes Application Tests', () => {
   before(async () => {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 40000
+    });
 
     // Clean up test database
     await Note.deleteMany();
