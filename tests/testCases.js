@@ -1,8 +1,9 @@
 import * as chai from 'chai';
-import chaiHttp, { request } from 'chai-http';
+import chaiHttp from 'chai-http';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import app from '../index.js';
+import request from 'supertest';
+import app from '../app.js';
 import { encrypt } from '../utils/encryption.js';
 import Note from '../models/Note.js';
 import User from '../models/User.js';
@@ -29,19 +30,19 @@ describe('SecureNotes Application Tests', () => {
     await User.deleteMany();
 
     // Create test users and get tokens
-    const userResponse = await request.execute(app)
+    const userResponse = await request(app)
 	  .post('/auth/register')
 	  .send({ email: 'testuser@example.com', password: 'Password123!' });
 
-    const otherUserResponse = await request.execute(app)
+    const otherUserResponse = await request(app)
 	  .post('/auth/register')
 	  .send({ email: 'otheruser@example.com', password: 'Password123!' });
 
-    const loginResponse = await request.execute(app)
+    const loginResponse = await request(app)
 	  .post('/auth/login')
 	  .send({ email: 'testuser@example.com', password: 'Password123!' });
 
-    const otherLoginResponse = await request.execute(app)
+    const otherLoginResponse = await request(app)
 	  .post('/auth/login')
 	  .send({ email: 'otheruser@example.com', password: 'Password123!' });
 
@@ -52,7 +53,7 @@ describe('SecureNotes Application Tests', () => {
   // Authentication Tests
   describe('Authentication Endpoints', () => {
     it('should register a new user successfully', async () => {
-      const res = await request.execute(app).post('/auth/register').send({
+      const res = await request(app).post('/auth/register').send({
         username: 'newuser',
         password: 'Password123!'
       });
@@ -61,7 +62,7 @@ describe('SecureNotes Application Tests', () => {
     });
 
     it('should login an existing user successfully', async () => {
-      const res = await request.execute(app).post('/auth/login').send({
+      const res = await request(app).post('/auth/login').send({
         username: 'newuser',
         password: 'Password123!'
       });
@@ -74,7 +75,7 @@ describe('SecureNotes Application Tests', () => {
   // Note CRUD Tests
   describe('Notes Endpoints', () => {
     it('should create a new note successfully', async () => {
-      const res = await request.execute(app).post('/notes')
+      const res = await request(app).post('/notes')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Test Note',
@@ -86,7 +87,7 @@ describe('SecureNotes Application Tests', () => {
     });
 
     it('should fetch all notes for the logged-in user', async () => {
-      const res = await request.execute(app).get('/notes')
+      const res = await request(app).get('/notes')
         .set('Authorization', `Bearer ${authToken}`);
       expect(res).to.have.status(200);
       expect(res.body.data).to.be.an('array');
@@ -94,12 +95,12 @@ describe('SecureNotes Application Tests', () => {
     });
 
     it('should not allow fetching notes without a token', async () => {
-      const res = await request.execute(app).get('/notes');
+      const res = await request(app).get('/notes');
       expect(res).to.have.status(401);
     });
 
     it('should update a note successfully', async () => {
-      const res = await request.execute(app).put(`/notes/${noteId}`)
+      const res = await request(app).put(`/notes/${noteId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Updated Note',
@@ -110,7 +111,7 @@ describe('SecureNotes Application Tests', () => {
     });
 
     it('should not allow updating a note by a different user', async () => {
-      const res = await request.execute(app).put(`/notes/${noteId}`)
+      const res = await request(app).put(`/notes/${noteId}`)
         .set('Authorization', `Bearer ${otherUserAuthToken}`)
         .send({
           title: 'Hacked Note',
@@ -120,14 +121,14 @@ describe('SecureNotes Application Tests', () => {
     });
 
     it('should delete a note successfully', async () => {
-      const res = await request.execute(app).delete(`/notes/${noteId}`)
+      const res = await request(app).delete(`/notes/${noteId}`)
         .set('Authorization', `Bearer ${authToken}`);
       expect(res).to.have.status(200);
       expect(res.body).to.have.property('message').that.equals('Note deleted successfully');
     });
 
     it('should not allow deleting a note by a different user', async () => {
-      const res = await request.execute(app).delete(`/notes/${noteId}`)
+      const res = await request(app).delete(`/notes/${noteId}`)
         .set('Authorization', `Bearer ${otherUserAuthToken}`);
       expect(res).to.have.status(403);
     });
@@ -138,8 +139,7 @@ describe('SecureNotes Application Tests', () => {
     await Note.deleteMany();
     await User.deleteMany();
 
-    // Stop in-memory MongoDB server
+    // Disconnect mongoose
     await mongoose.disconnect();
-    await mongoServer.stop();
   });
 });
