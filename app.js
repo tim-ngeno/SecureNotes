@@ -6,6 +6,8 @@ import authRouter from './routes/auth.js';
 import connectDB from './config/db.js';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -17,6 +19,15 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, try again after an hour.',
   headers: true
 });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Server the OpenAPI JSON files
+app.use('/openapi.json', express.static(path.join(__dirname,
+						  'openapi.json')));
+// Serve the rapidoc html file
+app.use('/docs', express.static(path.join(__dirname, 'rapidoc.html')));
 
 // Middleware
 app.use(bodyParser.json());
